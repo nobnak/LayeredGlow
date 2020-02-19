@@ -22,7 +22,7 @@ namespace LayeredGlowSys {
         public const string TAG_UNTAGGED = "Untagged";
         public static readonly int P_INTENSITY = Shader.PropertyToID("_Intensity");
         public static readonly int P_THREAHOLD = Shader.PropertyToID("_Threshold");
-        public TextureEvent GlowTexOnCreate;
+        public RenderTextureEvent MainTextureOnCreate;
 
         [SerializeField]
         protected DataSet dataset = new DataSet();
@@ -59,10 +59,11 @@ namespace LayeredGlowSys {
                 if (attachedCam == null) {
                     attachedCam = GetComponent<Camera>();
                 }
-                var attachedTargetTexture = attachedCam.targetTexture;
+				var attachedTex = attachedCam.targetTexture;
                 attachedCam.CopyFrom(link.mainCam);
+				attachedCam.targetTexture = attachedTex;
+
                 attachedCam.tag = TAG_UNTAGGED;
-                attachedCam.targetTexture = attachedTargetTexture;
                 attachedCam.cullingMask = 0;
                 attachedCam.clearFlags = CameraClearFlags.Nothing;
                 attachedCam.enabled = true;
@@ -75,7 +76,7 @@ namespace LayeredGlowSys {
 
                 if (NeedResize(mainTex, w, h)) {
                     ResetAllTargetTextures();
-                    link.mainCam.targetTexture = Resize(ref mainTex, w, h, 24);
+					SetTargetTextureToMainCamera(Resize(ref mainTex, w, h, 24));
                 }
 
                 ResizeWorkspaces();
@@ -176,10 +177,13 @@ namespace LayeredGlowSys {
                 }
             }
         }
-        private void ReleaseTextures() {
-            if (link.mainCam != null)
-                link.mainCam.targetTexture = null;
-
+		private void SetTargetTextureToMainCamera(RenderTexture targetTex) {
+			MainTextureOnCreate.Invoke(targetTex);
+			if (link.mainCam != null)
+				link.mainCam.targetTexture = targetTex;
+		}
+		private void ReleaseTextures() {
+			ResetAllTargetTextures();
             mainTex.DestroySelf();
         }
         private void ResizeWorkspaces() {
@@ -224,7 +228,7 @@ namespace LayeredGlowSys {
             }
         }
         void ResetAllTargetTextures() {
-            link.mainCam.targetTexture = null;
+			SetTargetTextureToMainCamera(null);
             foreach (var ws in workspaces)
                 if (ws.glowCam != null)
                     ws.glowCam.targetTexture = null;
