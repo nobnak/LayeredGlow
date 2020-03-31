@@ -35,7 +35,8 @@ namespace LayeredGlowSys {
         protected Blur blur;
         protected Workspace[] workspaces = new Workspace[0];
 
-        protected CameraData cameraData;
+        protected CameraData currAttachedCamData;
+		protected CameraData currMainCamData;
         protected Validator validator = new Validator();
 
         #region unity
@@ -45,22 +46,20 @@ namespace LayeredGlowSys {
 
             validator.Reset();
             validator.SetCheckers(() => {
-                var valid = attachedCam != null && cameraData.Equals(attachedCam);
-                if (!valid)
-                    cameraData = attachedCam;
+				var mainCam = GetMainCamera();
+                var valid = (attachedCam != null && currAttachedCamData.Equals(attachedCam))
+					&& (mainCam != null && currMainCamData.Equals(mainCam));
                 return valid;
             });
             validator.Validation += () => {
                 Debug.Log($"{this.GetType().Name} : Validation");
-				if (link.mainCam == null) {
-					link.mainCam = Camera.main;
-				}
+				var mainCam = GetMainCamera();
 
                 if (attachedCam == null) {
                     attachedCam = GetComponent<Camera>();
                 }
 				var attachedTex = attachedCam.targetTexture;
-                attachedCam.CopyFrom(link.mainCam);
+                attachedCam.CopyFrom(mainCam);
 				attachedCam.targetTexture = attachedTex;
 
                 attachedCam.tag = TAG_UNTAGGED;
@@ -68,13 +67,15 @@ namespace LayeredGlowSys {
                 attachedCam.clearFlags = CameraClearFlags.Nothing;
                 attachedCam.enabled = true;
                 attachedCam.useOcclusionCulling = false;
-                attachedCam.depth = link.mainCam.depth + 2;
-                cameraData = attachedCam;
+                attachedCam.depth = mainCam.depth + 2;
 
                 var w = attachedCam.pixelWidth;
                 var h = attachedCam.pixelHeight;
 
-                if (NeedResize(mainTex, w, h)) {
+				currAttachedCamData = attachedCam;
+				currMainCamData = mainCam;
+
+				if (NeedResize(mainTex, w, h)) {
                     ResetAllTargetTextures();
 					SetTargetTextureToMainCamera(Resize(ref mainTex, w, h, 24));
                 }
@@ -168,6 +169,11 @@ namespace LayeredGlowSys {
         #endregion
 
         #region member
+		protected Camera GetMainCamera() {
+			if (link.mainCam == null)
+				link.mainCam = Camera.main;
+			return link.mainCam;
+		}
         private void ClearAllGlowTextures() {
             for (var i = 0; i<workspaces.Length; i++) {
                 var ws = workspaces[i];
