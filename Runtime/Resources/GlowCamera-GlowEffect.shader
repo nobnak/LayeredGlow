@@ -9,6 +9,7 @@
 
 			CGINCLUDE
 			#pragma multi_compile ___ LUM_AVERAGE LUM_VALUE
+			#pragma multi_compile ___ ALPHA_THROTTLE
             #include "UnityCG.cginc"
 			#include "Assets/Packages/Gist/CGIncludes/ColorSpace.cginc"
 
@@ -47,6 +48,9 @@
 				float4 cmain = tex2D(_MainTex, i.uv);
 				float l = Lum(cmain);
 				float4 cthresh = step(_Threshold.x, l) * cmain;
+				#if defined(ALPHA_THROTTLE)
+				cthresh = float4(cthresh.xyz, 1) * cthresh.w;
+				#endif
 				return cthresh;
 			}
             float4 fragAdditive (v2f i) : SV_Target {

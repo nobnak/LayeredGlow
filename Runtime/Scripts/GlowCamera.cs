@@ -17,7 +17,8 @@ namespace LayeredGlowSys {
 
         public enum OverlayMode { None = 0, Glow, Threshold, Blurred }
         public enum ShaderPass { Threshold = 0, Additive, Overlay }
-        public enum KeywordLum { ___ = 0, LUM_AVERAGE, LUM_VALUE }
+        public enum KeywordThreshold { ___ = 0, LUM_AVERAGE, LUM_VALUE }
+		public enum KeywordAlpha { ___ = 0, ALPHA_THROTTLE }
         public const string PATH = "GlowCamera-GlowEffect";
         public const string TAG_UNTAGGED = "Untagged";
         public static readonly int P_INTENSITY = Shader.PropertyToID("_Intensity");
@@ -287,8 +288,9 @@ namespace LayeredGlowSys {
             public float intensity = 3f;
             [Range(0f, 1f)]
             public float threshold = 0.6f;
-            public KeywordLum thresholdMode = KeywordLum.___;
-        }
+            public KeywordThreshold thresholdMode = default(KeywordThreshold);
+			public KeywordAlpha alphaUsage = default(KeywordAlpha);
+		}
         [System.Serializable]
         public class DataSet {
             public Commons commons = new Commons();
@@ -334,8 +336,10 @@ namespace LayeredGlowSys {
                 mat.SetFloat(P_INTENSITY, data.intensity);
                 mat.SetVector(P_THREAHOLD, vthresh);
                 mat.shaderKeywords = null;
-                if (data.thresholdMode != KeywordLum.___)
+                if (data.thresholdMode != KeywordThreshold.___)
                     mat.EnableKeyword(data.thresholdMode.ToString());
+				if (data.alphaUsage != default)
+					mat.EnableKeyword(data.alphaUsage.ToString());
                 Graphics.Blit(glowTex, thresholdTex, mat, (int)ShaderPass.Threshold);
 
                 var tmpBlurIter = data.iterations;
