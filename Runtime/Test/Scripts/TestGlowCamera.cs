@@ -19,7 +19,7 @@ namespace LayeredGlowSys {
 		private void Update() {
 			var data = glow.CurrData;
 			var time = Time.realtimeSinceStartup * speed;
-			var t = hysteresis * (Mathf.PerlinNoise(time, 0) - 0.5f) + 0.5f;
+			var t = Mathf.Clamp01(hysteresis * (Mathf.PerlinNoise(time, 0) - 0.5f) + 0.5f);
 
 			for (var i = 0; i < data.datas.Length; i++) {
 				var d = data.datas[i];

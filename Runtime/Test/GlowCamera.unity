@@ -199,7 +199,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 1154500442}
+  m_TargetTexture: {fileID: 1369485149}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -445,7 +445,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!84 &1154500442
+--- !u!84 &1369485149
 RenderTexture:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -622,19 +622,19 @@ MonoBehaviour:
       debugLayer:
         serializedVersion: 2
         m_Bits: 2048
-      overlayMode: 1
+      overlayMode: 2
       overlayIndex: 0
       overlayHeight: 0.2
     datas:
     - layerIndex: 8
       iterations: 0
-      blurResolution: 256
+      blurResolution: 64
       intensity: 1
       threshold: 0.15
       thresholdMode: 0
     - layerIndex: 9
       iterations: 0
-      blurResolution: 256
+      blurResolution: 64
       intensity: 1
       threshold: 0.15
       thresholdMode: 0
@@ -696,7 +696,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   glow: {fileID: 2074252538}
   peakIntensity: 1
-  speed: 2
+  speed: 1
   hysteresis: 4
 --- !u!1001 &6846051286200081050
 PrefabInstance:
@@ -772,22 +772,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488143, guid: b3961022817ee254198f2da125d5709e,
         type: 3}
-      propertyPath: RotationModule.enabled
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6846051285958488143, guid: b3961022817ee254198f2da125d5709e,
-        type: 3}
       propertyPath: RotationModule.curve.scalar
-      value: 1.5707963
-      objectReference: {fileID: 0}
-    - target: {fileID: 6846051285958488143, guid: b3961022817ee254198f2da125d5709e,
-        type: 3}
-      propertyPath: RotationModule.separateAxes
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6846051285958488143, guid: b3961022817ee254198f2da125d5709e,
-        type: 3}
-      propertyPath: RotationModule.x.scalar
       value: 1.5707963
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488143, guid: b3961022817ee254198f2da125d5709e,
