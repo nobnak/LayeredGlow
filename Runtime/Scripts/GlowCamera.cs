@@ -18,7 +18,7 @@ namespace LayeredGlowSys {
         public enum OverlayMode { None = 0, Glow, Threshold, Blurred }
         public enum ShaderPass { Threshold = 0, Additive, Overlay }
         public enum KeywordThreshold { ___ = 0, LUM_AVERAGE, LUM_VALUE }
-		public enum KeywordAlpha { ___ = 0, ALPHA_THROTTLE }
+        public enum KeywordAlpha { ___ = 0, ALPHA_THROTTLE }
         public const string PATH = "GlowCamera-GlowEffect";
         public const string TAG_UNTAGGED = "Untagged";
         public static readonly int P_INTENSITY = Shader.PropertyToID("_Intensity");
@@ -37,7 +37,7 @@ namespace LayeredGlowSys {
         protected Workspace[] workspaces = new Workspace[0];
 
         protected CameraData currAttachedCamData;
-		protected CameraData currMainCamData;
+        protected CameraData currMainCamData;
         protected Validator validator = new Validator();
 
         #region unity
@@ -47,21 +47,21 @@ namespace LayeredGlowSys {
 
             validator.Reset();
             validator.SetCheckers(() => {
-				var mainCam = GetMainCamera();
+                var mainCam = GetMainCamera();
                 var valid = (attachedCam != null && currAttachedCamData.Equals(attachedCam))
-					&& (mainCam != null && currMainCamData.Equals(mainCam));
+                    && (mainCam != null && currMainCamData.Equals(mainCam));
                 return valid;
             });
             validator.Validation += () => {
                 Debug.Log($"{this.GetType().Name} : Validation");
-				var mainCam = GetMainCamera();
+                var mainCam = GetMainCamera();
 
                 if (attachedCam == null) {
                     attachedCam = GetComponent<Camera>();
                 }
-				var attachedTex = attachedCam.targetTexture;
+                var attachedTex = attachedCam.targetTexture;
                 attachedCam.CopyFrom(mainCam);
-				attachedCam.targetTexture = attachedTex;
+                attachedCam.targetTexture = attachedTex;
 
                 attachedCam.tag = TAG_UNTAGGED;
                 attachedCam.cullingMask = 0;
@@ -73,12 +73,12 @@ namespace LayeredGlowSys {
                 var w = attachedCam.pixelWidth;
                 var h = attachedCam.pixelHeight;
 
-				currAttachedCamData = attachedCam;
-				currMainCamData = mainCam;
+                currAttachedCamData = attachedCam;
+                currMainCamData = mainCam;
 
-				if (NeedResize(mainTex, w, h)) {
+                if (NeedResize(mainTex, w, h)) {
                     ResetAllTargetTextures();
-					SetTargetTextureToMainCamera(Resize(ref mainTex, w, h, 24));
+                    SetTargetTextureToMainCamera(Resize(ref mainTex, w, h, 24));
                 }
 
                 ResizeWorkspaces();
@@ -130,14 +130,14 @@ namespace LayeredGlowSys {
                 var tex = default(Texture);
                 switch (dataset.commons.overlayMode) {
                     case OverlayMode.Glow:
-                        tex = ws.glowTex;
-                        break;
+                    tex = ws.glowTex;
+                    break;
                     case OverlayMode.Threshold:
-                        tex = ws.thresholdTex;
-                        break;
+                    tex = ws.thresholdTex;
+                    break;
                     case OverlayMode.Blurred:
-                        tex = ws.blurred;
-                        break;
+                    tex = ws.blurred;
+                    break;
                 }
                 if (tex != null) {
                     var gap = 10f;
@@ -154,9 +154,9 @@ namespace LayeredGlowSys {
                 }
             }
         }
-#endregion
+        #endregion
 
-#region interface
+        #region interface
         public DataSet CurrData {
             get {
                 validator.Validate();
@@ -170,13 +170,13 @@ namespace LayeredGlowSys {
         #endregion
 
         #region member
-		protected Camera GetMainCamera() {
-			if (link.mainCam == null)
-				link.mainCam = Camera.main;
-			return link.mainCam;
-		}
+        protected Camera GetMainCamera() {
+            if (link.mainCam == null)
+                link.mainCam = Camera.main;
+            return link.mainCam;
+        }
         private void ClearAllGlowTextures() {
-            for (var i = 0; i<workspaces.Length; i++) {
+            for (var i = 0; i < workspaces.Length; i++) {
                 var ws = workspaces[i];
 
                 using (new RenderTextureActivator(ws.glowTex)) {
@@ -184,13 +184,13 @@ namespace LayeredGlowSys {
                 }
             }
         }
-		private void SetTargetTextureToMainCamera(RenderTexture targetTex) {
-			MainTextureOnCreate.Invoke(targetTex);
-			if (link.mainCam != null)
-				link.mainCam.targetTexture = targetTex;
-		}
-		private void ReleaseTextures() {
-			ResetAllTargetTextures();
+        private void SetTargetTextureToMainCamera(RenderTexture targetTex) {
+            MainTextureOnCreate.Invoke(targetTex);
+            if (link.mainCam != null)
+                link.mainCam.targetTexture = targetTex;
+        }
+        private void ReleaseTextures() {
+            ResetAllTargetTextures();
             mainTex.DestroySelf();
         }
         private void ResizeWorkspaces() {
@@ -201,6 +201,7 @@ namespace LayeredGlowSys {
             System.Array.Resize(ref workspaces, dataset.datas.Length);
             for (var i = oldWorkspaceSize; i < workspaces.Length; i++) {
                 var go = new GameObject("Glow camera");
+                go.hideFlags = HideFlags.DontSave;
                 workspaces[i] = new Workspace() {
                     glowCam = go.AddComponent<Camera>(),
                     cleaner = go.AddComponent<TargetCleaner>()
@@ -235,7 +236,7 @@ namespace LayeredGlowSys {
             }
         }
         void ResetAllTargetTextures() {
-			SetTargetTextureToMainCamera(null);
+            SetTargetTextureToMainCamera(null);
             foreach (var ws in workspaces)
                 if (ws.glowCam != null)
                     ws.glowCam.targetTexture = null;
@@ -245,9 +246,9 @@ namespace LayeredGlowSys {
                 ws.Dispose();
             System.Array.Resize(ref workspaces, 0);
         }
-#endregion
+        #endregion
 
-#region static
+        #region static
         public static bool NeedResize(RenderTexture tex, int width, int height) {
             return tex == null || tex.width != width || tex.height != height;
         }
@@ -256,16 +257,18 @@ namespace LayeredGlowSys {
             RenderTextureFormat format = RenderTextureFormat.ARGBHalf) {
 
             tex.DestroySelf();
+
+            var q = QualitySettings.antiAliasing;
             tex = new RenderTexture(width, height, depth, format);
-            tex.antiAliasing = 1; // QualitySettings.antiAliasing;
+            tex.antiAliasing = q <= 1 ? 1 : q;
             return tex;
         }
         public static RenderTexture Resize(ref RenderTexture tex, RenderTexture source) {
             return Resize(ref tex, source.width, source.height, source.depth, source.format);
         }
-#endregion
+        #endregion
 
-#region classes
+        #region classes
         [System.Serializable]
         public class References {
             public Camera mainCam;
@@ -281,16 +284,16 @@ namespace LayeredGlowSys {
         [System.Serializable]
         public class Data {
             public int layerIndex;
-			[Range(0, 3)]
+            [Range(0, 3)]
             public int iterations = 0;
-			[Range(4, 1024)]
+            [Range(4, 1024)]
             public int blurResolution = 128;
             public float intensity = 3f;
             [Range(0f, 1f)]
             public float threshold = 0.6f;
             public KeywordThreshold thresholdMode = default(KeywordThreshold);
-			public KeywordAlpha alphaUsage = default(KeywordAlpha);
-		}
+            public KeywordAlpha alphaUsage = default(KeywordAlpha);
+        }
         [System.Serializable]
         public class DataSet {
             public Commons commons = new Commons();
@@ -313,9 +316,9 @@ namespace LayeredGlowSys {
                 }
             }
 
-#region interface
+            #region interface
 
-#region IDisposable
+            #region IDisposable
             public void Dispose() {
                 if (glowCam != null) {
                     glowCam.targetTexture = null;
@@ -326,7 +329,7 @@ namespace LayeredGlowSys {
                 blurred.DestroySelf();
 
             }
-#endregion
+            #endregion
 
             public void UpdateBlurTex(Data data, Blur blur, Texture source, Material mat) {
                 if (NeedResize(thresholdTex, glowTex.width, glowTex.height)) {
@@ -338,17 +341,17 @@ namespace LayeredGlowSys {
                 mat.shaderKeywords = null;
                 if (data.thresholdMode != KeywordThreshold.___)
                     mat.EnableKeyword(data.thresholdMode.ToString());
-				if (data.alphaUsage != default)
-					mat.EnableKeyword(data.alphaUsage.ToString());
+                if (data.alphaUsage != default)
+                    mat.EnableKeyword(data.alphaUsage.ToString());
                 Graphics.Blit(glowTex, thresholdTex, mat, (int)ShaderPass.Threshold);
 
                 var tmpBlurIter = data.iterations;
-				data.blurResolution = Mathf.Max(4, data.blurResolution);
+                data.blurResolution = Mathf.Max(4, data.blurResolution);
                 blur.FindSize(source.height, data.blurResolution, out tmpBlurIter, out int tmpBlurLod);
                 blur.Render(thresholdTex, ref blurred, tmpBlurIter, tmpBlurLod);
             }
-#endregion
+            #endregion
         }
-#endregion
+        #endregion
     }
 }
