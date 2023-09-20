@@ -1,4 +1,4 @@
-using nobnak.Gist;
+using Gist2.Deferred;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -18,23 +18,23 @@ namespace LayeredGlowSys.Test {
         protected Vector3 restPosition;
         protected float time;
 
-        protected Validator validator = new Validator();
+        protected Validator changed = new Validator();
 
         #region unity
         private void OnEnable() {
             time = 0f;
             restPosition = transform.position;
 
-            validator.Reset();
-            validator.Validation += () => {
+            changed.Reset();
+            changed.OnValidate += () => {
                 Application.targetFrameRate = framerate;
             };
         }
         private void OnValidate() {
-            validator.Invalidate();
+            changed.Invalidate();
         }
         private void Update() {
-            validator.Validate();
+            changed.Validate();
             time += Time.deltaTime * speed;
 
             transform.position = restPosition

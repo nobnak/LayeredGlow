@@ -1,13 +1,14 @@
-using nobnak.Gist;
-using nobnak.Gist.Cameras;
-using nobnak.Gist.Compute.Blurring;
-using nobnak.Gist.Events;
-using nobnak.Gist.ObjectExt;
-using nobnak.Gist.Scoped;
+using Gist2.Deferred;
+using Gist2.Extensions.ComponentExt;
+using Gist2.Scope;
+using LayeredGlowSys.Data;
+using PyramidBlur;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.Rendering;
 
 namespace LayeredGlowSys {
 
@@ -23,12 +24,13 @@ namespace LayeredGlowSys {
         public const string TAG_UNTAGGED = "Untagged";
         public static readonly int P_INTENSITY = Shader.PropertyToID("_Intensity");
         public static readonly int P_THREAHOLD = Shader.PropertyToID("_Threshold");
-        public RenderTextureEvent MainTextureOnCreate;
 
         [SerializeField]
-        protected DataSet dataset = new DataSet();
+        protected Events events = new();
         [SerializeField]
-        protected References link = new References();
+        protected DataSet dataset = new();
+        [SerializeField]
+        protected References link = new();
 
         protected Camera attachedCam;
         protected RenderTexture mainTex;
@@ -38,7 +40,7 @@ namespace LayeredGlowSys {
 
         protected CameraData currAttachedCamData;
         protected CameraData currMainCamData;
-        protected Validator validator = new Validator();
+        protected Validator validator = new();
 
         #region unity
         void OnEnable() {
@@ -46,13 +48,13 @@ namespace LayeredGlowSys {
             mat = Resources.Load<Material>(PATH);
 
             validator.Reset();
-            validator.SetCheckers(() => {
+            validator.CheckValidity += () => {
                 var mainCam = GetMainCamera();
                 var valid = (attachedCam != null && currAttachedCamData.Equals(attachedCam))
                     && (mainCam != null && currMainCamData.Equals(mainCam));
                 return valid;
-            });
-            validator.Validation += () => {
+            };
+            validator.OnValidate += () => {
                 Debug.Log($"{this.GetType().Name} : Validation");
                 var mainCam = GetMainCamera();
 
@@ -146,7 +148,7 @@ namespace LayeredGlowSys {
 
                     GL.PushMatrix();
                     GL.LoadPixelMatrix();
-                    using (new RenderTextureActivator(destination)) {
+                    using (new ScopedRenderTexture(destination)) {
                         Graphics.DrawTexture(new Rect(gap, gap + height, height * aspect, -height),
                                 tex, mat, (int)ShaderPass.Overlay);
                     }
@@ -179,19 +181,19 @@ namespace LayeredGlowSys {
             for (var i = 0; i < workspaces.Length; i++) {
                 var ws = workspaces[i];
 
-                using (new RenderTextureActivator(ws.glowTex)) {
+                using (new ScopedRenderTexture(ws.glowTex)) {
                     GL.Clear(false, true, Color.clear);
                 }
             }
         }
         private void SetTargetTextureToMainCamera(RenderTexture targetTex) {
-            MainTextureOnCreate.Invoke(targetTex);
+            events.MainTextureOnCreate.Invoke(targetTex);
             if (link.mainCam != null)
                 link.mainCam.targetTexture = targetTex;
         }
         private void ReleaseTextures() {
             ResetAllTargetTextures();
-            mainTex.DestroySelf();
+            mainTex.Destroy();
         }
         private void ResizeWorkspaces() {
             for (var i = dataset.datas.Length; i < workspaces.Length; i++) {
@@ -252,11 +254,15 @@ namespace LayeredGlowSys {
         public static bool NeedResize(RenderTexture tex, int width, int height) {
             return tex == null || tex.width != width || tex.height != height;
         }
+
+        public static bool NeedResize(RenderTexture tex, Texture refTex) {
+            return NeedResize(tex, refTex.width, refTex.height);
+        }
         public static RenderTexture Resize(ref RenderTexture tex, int width, int height,
             int depth = 24,
             RenderTextureFormat format = RenderTextureFormat.ARGBHalf) {
 
-            tex.DestroySelf();
+            tex.Destroy();
 
             var q = QualitySettings.antiAliasing;
             tex = new RenderTexture(width, height, depth, format);
@@ -269,6 +275,13 @@ namespace LayeredGlowSys {
         #endregion
 
         #region classes
+        [System.Serializable]
+        public class Events {
+            [System.Serializable]
+            public class RenderTextureEvent : UnityEvent<RenderTexture> { }
+
+            public RenderTextureEvent MainTextureOnCreate = new();
+        }
         [System.Serializable]
         public class References {
             public Camera mainCam;
@@ -283,11 +296,8 @@ namespace LayeredGlowSys {
         }
         [System.Serializable]
         public class Data {
+            public Blur.Settings blur = new();
             public int layerIndex;
-            [Range(0, 3)]
-            public int iterations = 0;
-            [Range(4, 1024)]
-            public int blurResolution = 128;
             public float intensity = 3f;
             [Range(0f, 1f)]
             public float threshold = 0.6f;
@@ -322,19 +332,21 @@ namespace LayeredGlowSys {
             public void Dispose() {
                 if (glowCam != null) {
                     glowCam.targetTexture = null;
-                    glowCam.DestroyGo();
+                    glowCam.gameObject.Destroy();
                 }
-                glowTex.DestroySelf();
-                thresholdTex.DestroySelf();
-                blurred.DestroySelf();
+                glowTex.Destroy();
+                thresholdTex.Destroy();
+                blurred.Destroy();
 
             }
             #endregion
 
             public void UpdateBlurTex(Data data, Blur blur, Texture source, Material mat) {
-                if (NeedResize(thresholdTex, glowTex.width, glowTex.height)) {
+                if (NeedResize(thresholdTex, glowTex))
                     thresholdTex = Resize(ref thresholdTex, glowTex);
-                }
+                if (NeedResize(blurred, glowTex))
+                    blurred = Resize(ref blurred, glowTex);
+
                 var vthresh = new Vector4(data.threshold, 1f / Mathf.Clamp(1f - data.threshold, 0.1f, 1f), 0f, 0f);
                 mat.SetFloat(P_INTENSITY, data.intensity);
                 mat.SetVector(P_THREAHOLD, vthresh);
@@ -345,10 +357,7 @@ namespace LayeredGlowSys {
                     mat.EnableKeyword(data.alphaUsage.ToString());
                 Graphics.Blit(glowTex, thresholdTex, mat, (int)ShaderPass.Threshold);
 
-                var tmpBlurIter = data.iterations;
-                data.blurResolution = Mathf.Max(4, data.blurResolution);
-                blur.FindSize(source.height, data.blurResolution, out tmpBlurIter, out int tmpBlurLod);
-                blur.Render(thresholdTex, ref blurred, tmpBlurIter, tmpBlurLod);
+                blur.Render(thresholdTex, blurred, data.blur);
             }
             #endregion
         }

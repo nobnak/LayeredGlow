@@ -11,7 +11,7 @@
 			#pragma multi_compile ___ LUM_AVERAGE LUM_VALUE
 			#pragma multi_compile ___ ALPHA_THROTTLE
             #include "UnityCG.cginc"
-			#include "Assets/Packages/Gist/CGIncludes/ColorSpace.cginc"
+			#include "Luminance.cginc"
 
             struct appdata {
                 float4 vertex : POSITION;

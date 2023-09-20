@@ -1,4 +1,4 @@
-using nobnak.Gist.Scoped;
+using Gist2.Scope;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,7 +23,7 @@ namespace LayeredGlowSys {
             cam = GetComponent<Camera>();
         }
         private void OnPreRender() {
-            using (new RenderTextureActivator(colorTex)) {
+            using (new ScopedRenderTexture(colorTex)) {
                 GL.Clear(false, true, Color.clear);
             }
         }

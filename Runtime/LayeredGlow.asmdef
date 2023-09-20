@@ -1,14 +1,17 @@
 {
     "name": "LayeredGlow",
+    "rootNamespace": "",
     "references": [
-        "nobnak.Gist"
+        "Gist2",
+        "PyramidBlur"
     ],
-    "optionalUnityReferences": [],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": false,
     "precompiledReferences": [],
     "autoReferenced": true,
-    "defineConstraints": []
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
 }
