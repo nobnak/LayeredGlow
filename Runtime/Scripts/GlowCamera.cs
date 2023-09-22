@@ -19,6 +19,8 @@ namespace LayeredGlowSys {
         [SerializeField]
         protected Events events = new();
         [SerializeField]
+        public Preset preset = new();
+        [SerializeField]
         protected DataSet dataset = new();
         [SerializeField]
         protected References link = new();
@@ -69,7 +71,7 @@ namespace LayeredGlowSys {
                 currAttachedCamData = attachedCam;
                 currMainCamData = mainCam;
 
-                switch (dataset.commons.mainTexType) {
+                switch (preset.mainTexType) {
                     case MainTexType.CaptureMainCamera: {
                         if (NeedResize(mainTex_generated, w, h)) {
                             ResetAllRelatedToMainTex();
@@ -178,7 +180,7 @@ namespace LayeredGlowSys {
 
         #region member
         protected RenderTexture GetMainTex() {
-            switch (dataset.commons.mainTexType) {
+            switch (preset.mainTexType) {
                 case MainTexType.CaptureMainCamera: {
                     return mainTex_generated;
                 }
@@ -316,8 +318,11 @@ namespace LayeredGlowSys {
             public Camera mainCam;
         }
         [System.Serializable]
-        public class Commons {
+        public class Preset {
             public MainTexType mainTexType = default;
+        }
+        [System.Serializable]
+        public class Commons {
             public Color clearColor = Color.clear;
             public LayerMask debugLayer;
             public OverlayMode overlayMode = default;
