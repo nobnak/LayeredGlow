@@ -29,7 +29,7 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
-    - _Intensity: 0.6389077
+    - _Intensity: 1
     - _Threshold: 0.66
     m_Colors:
     - _Threshold: {r: 0.15, g: 1.1764705, b: 0, a: 0}
