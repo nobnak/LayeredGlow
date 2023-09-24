@@ -29,6 +29,8 @@ namespace LayeredGlowSys {
         protected RenderTexture mainTex_generated, mainTex_external;
         protected Material mat;
         protected Blur blur;
+
+        protected bool initialized_workspace;
         protected Workspace[] workspaces = new Workspace[0];
 
         protected CameraData currAttachedCamData;
@@ -50,6 +52,7 @@ namespace LayeredGlowSys {
             validator.OnValidate += () => {
                 Debug.Log($"{this.GetType().Name} : Validation");
                 var mainCam = GetMainCamera();
+                initialized_workspace = false;
 
                 if (attachedCam == null) {
                     attachedCam = GetComponent<Camera>();
@@ -86,9 +89,12 @@ namespace LayeredGlowSys {
                     }
                 }
 
+                var mainTex = GetMainTex();
+                if (mainTex == null) return;
                 ResizeWorkspaces();
-                UpdateWorkspaces(GetMainTex());
+                UpdateWorkspaces(mainTex);
 
+                initialized_workspace = true;
             };
         }
 
@@ -110,12 +116,12 @@ namespace LayeredGlowSys {
         }
         void OnRenderImage(RenderTexture source, RenderTexture destination) {
             validator.Validate();
-            if (link.mainCam == null) {
+            var mainTex = GetMainTex();
+            if (link.mainCam == null || mainTex == null || !initialized_workspace) {
                 Graphics.Blit(source, destination);
                 return;
             }
 
-            var mainTex = GetMainTex();
             Graphics.Blit(mainTex, destination);
 
             for (var i = 0; i < workspaces.Length; i++) {
@@ -229,8 +235,6 @@ namespace LayeredGlowSys {
             }
         }
         private void UpdateWorkspaces(RenderTexture mainTex) {
-            if (mainTex == null) return;
-
             var w = mainTex.width;
             var h = mainTex.height;
             for (var i = 0; i < workspaces.Length; i++) {
