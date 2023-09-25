@@ -180,7 +180,10 @@ namespace LayeredGlowSys {
             }
         }
         public void ListenMainTex(RenderTexture tex) {
-            mainTex_external = tex;
+            if (mainTex_external != tex) {
+                validator.Invalidate();
+                mainTex_external = tex;
+            }
         }
         #endregion
 
