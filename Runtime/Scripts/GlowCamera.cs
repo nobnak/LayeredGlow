@@ -46,7 +46,8 @@ namespace LayeredGlowSys {
             validator.CheckValidity += () => {
                 var mainCam = GetMainCamera();
                 var valid = (attachedCam != null && currAttachedCamData.Equals(attachedCam))
-                    && (mainCam != null && currMainCamData.Equals(mainCam));
+                    && (mainCam != null && currMainCamData.Equals(mainCam))
+                    && initialized_workspace;
                 return valid;
             };
             validator.OnValidate += () => {

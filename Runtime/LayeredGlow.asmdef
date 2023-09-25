@@ -2,6 +2,7 @@
     "name": "LayeredGlow",
     "rootNamespace": "",
     "references": [
+        "Unity.Mathematics",
         "Gist2",
         "PyramidBlur"
     ],
