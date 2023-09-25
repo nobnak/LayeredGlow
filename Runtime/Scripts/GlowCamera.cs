@@ -26,7 +26,7 @@ namespace LayeredGlowSys {
         protected References link = new();
 
         protected Camera attachedCam;
-        protected RenderTexture mainTex_generated, mainTex_external;
+        protected RenderTexture mainTex_generated;
         protected Material mat;
         protected Blur blur;
 
@@ -72,30 +72,26 @@ namespace LayeredGlowSys {
                 var w = attachedCam.pixelWidth;
                 var h = attachedCam.pixelHeight;
 
-                currAttachedCamData = attachedCam;
-                currMainCamData = mainCam;
-
-                switch (preset.mainTexType) {
-                    case MainTexType.CaptureMainCamera: {
-                        if (NeedResize(mainTex_generated, w, h)) {
-                            ResetAllRelatedToMainTex();
-                            SetTargetTextureToMainCamera(Resize(ref mainTex_generated, w, h, 24));
-                        }
-                        break;
+                var targetTexture = mainCam.targetTexture;
+                if (targetTexture == null) {
+                    if (NeedResize(mainTex_generated, w, h)) {
+                        ResetAllRelatedToMainTex();
+                        SetTargetTextureToMainCamera(Resize(ref mainTex_generated, w, h, 24)); 
                     }
-                    default:
-                    case MainTexType.ExternalTexture: {
-                        ReleaseMainTexture();
-                        break;
-                    }
+                } else {
+                    ReleaseMainTexture();
                 }
 
                 var mainTex = GetMainTex();
-                if (mainTex == null) return;
-                ResizeWorkspaces();
-                UpdateWorkspaces(mainTex);
+                if (mainTex != null) {
+                    ResizeWorkspaces();
+                    UpdateWorkspaces(mainTex);
 
-                initialized_workspace = true;
+                    initialized_workspace = true;
+                }
+
+                currAttachedCamData = attachedCam;
+                currMainCamData = mainCam;
             };
         }
 
@@ -180,25 +176,12 @@ namespace LayeredGlowSys {
                 dataset = value;
             }
         }
-        public void ListenMainTex(RenderTexture tex) {
-            if (mainTex_external != tex) {
-                validator.Invalidate();
-                mainTex_external = tex;
-            }
-        }
         #endregion
 
         #region member
         protected RenderTexture GetMainTex() {
-            switch (preset.mainTexType) {
-                case MainTexType.CaptureMainCamera: {
-                    return mainTex_generated;
-                }
-                default:
-                case MainTexType.ExternalTexture: {
-                    return mainTex_external;
-                }
-            }
+            var c = link.mainCam;
+            return (mainTex_generated == null) ? c.targetTexture : mainTex_generated;
         }
         protected Camera GetMainCamera() {
             if (link.mainCam == null)
@@ -216,8 +199,8 @@ namespace LayeredGlowSys {
         }
         private void SetTargetTextureToMainCamera(RenderTexture targetTex) {
             events.MainTextureOnCreate.Invoke(targetTex);
-            if (link.mainCam != null)
-                link.mainCam.targetTexture = targetTex;
+            var c = link.mainCam;
+            c.targetTexture = targetTex;
         }
         private void ReleaseMainTexture() {
             ResetAllRelatedToMainTex();
@@ -312,7 +295,6 @@ namespace LayeredGlowSys {
         public enum ShaderPass { Threshold = 0, Additive, Overlay }
         public enum KeywordThreshold { ___ = 0, LUM_AVERAGE, LUM_VALUE }
         public enum KeywordAlpha { ___ = 0, ALPHA_THROTTLE }
-        public enum MainTexType { CaptureMainCamera = 0, ExternalTexture }
 
         [System.Serializable]
         public class Events {
@@ -327,7 +309,6 @@ namespace LayeredGlowSys {
         }
         [System.Serializable]
         public class Preset {
-            public MainTexType mainTexType = default;
         }
         [System.Serializable]
         public class Commons {
