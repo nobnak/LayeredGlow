@@ -220,7 +220,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 1481682626}
+  m_TargetTexture: {fileID: 1921602533}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -687,7 +687,7 @@ LightingSettings:
   m_PVRTiledBaking: 0
   m_NumRaysToShootPerTexel: -1
   m_RespectSceneVisibilityWhenBakingGI: 0
---- !u!84 &1481682626
+--- !u!84 &1921602533
 RenderTexture:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -893,19 +893,19 @@ MonoBehaviour:
       overlayHeight: 0.2
     datas:
     - blur:
-        diffusion: 4.9
+        diffusion: 5
         fastMode: 0
       layerIndex: 8
       intensity: 1
-      threshold: 0.51
+      threshold: 0.8
       thresholdMode: 0
       alphaUsage: 0
     - blur:
-        diffusion: 4.7
+        diffusion: 5
         fastMode: 0
       layerIndex: 9
       intensity: 1
-      threshold: 0.15
+      threshold: 0.8
       thresholdMode: 0
       alphaUsage: 0
   link:

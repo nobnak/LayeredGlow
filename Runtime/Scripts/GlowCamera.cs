@@ -73,7 +73,7 @@ namespace LayeredGlowSys {
                 var h = attachedCam.pixelHeight;
 
                 var targetTexture = mainCam.targetTexture;
-                if (targetTexture == null) {
+                if (targetTexture == null || targetTexture == mainTex_generated) {
                     if (NeedResize(mainTex_generated, w, h)) {
                         ResetAllRelatedToMainTex();
                         SetTargetTextureToMainCamera(Resize(ref mainTex_generated, w, h, 24)); 
