@@ -490,7 +490,7 @@ Camera:
     serializedVersion: 2
     m_Bits: 4294967295
   m_RenderingPath: -1
-  m_TargetTexture: {fileID: 1921602533}
+  m_TargetTexture: {fileID: 1854471554}
   m_TargetDisplay: 0
   m_TargetEye: 3
   m_HDR: 1
@@ -651,13 +651,17 @@ PrefabInstance:
       propertyPath: m_Layer
       value: 9
       objectReference: {fileID: 0}
+    - target: {fileID: 6846051285958488136, guid: b3961022817ee254198f2da125d5709e, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488137, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: m_RootOrder
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488137, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -3
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488137, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: m_LocalPosition.y
@@ -972,7 +976,7 @@ RenderTexture:
   m_DownscaleFallback: 0
   m_IsAlphaChannelOptional: 0
   serializedVersion: 5
-  m_Width: 1166
+  m_Width: 1228
   m_Height: 550
   m_AntiAliasing: 1
   m_MipCount: -1
@@ -1312,13 +1316,17 @@ PrefabInstance:
       propertyPath: m_Name
       value: Particle System 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6846051285958488136, guid: b3961022817ee254198f2da125d5709e, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488137, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: m_RootOrder
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488137, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 3
+      value: -15
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488137, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: m_LocalPosition.y

@@ -5,7 +5,7 @@
 	},
 	"name": "jp.nobnak.layered_glow",
 	"displayName": "Layered Glow",
-	"version": "1.3.0",
+	"version": "1.3.1",
 
 	"dependencies": {
 		"com.unity.mathematics": "1.2.6",

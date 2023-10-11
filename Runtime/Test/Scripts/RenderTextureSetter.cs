@@ -18,6 +18,7 @@ public class RenderTextureSetter : MonoBehaviour {
     void OnEnable() {
         textureWrapper = new RenderTextureWrapper(size => {
             var tex = new RenderTexture(size.x, size.y, 24);
+            tex.hideFlags = HideFlags.DontSave;
             return tex;
         });
         textureWrapper.Changed += v => {

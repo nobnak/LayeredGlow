@@ -277,6 +277,7 @@ namespace LayeredGlowSys {
 
             var q = QualitySettings.antiAliasing;
             tex = new RenderTexture(width, height, depth, format);
+            tex.hideFlags = HideFlags.DontSave;
             tex.antiAliasing = q <= 1 ? 1 : q;
             return tex;
         }
