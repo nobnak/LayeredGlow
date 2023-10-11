@@ -293,7 +293,7 @@ namespace LayeredGlowSys {
 
         public enum OverlayMode { None = 0, Glow, Threshold, Blurred }
         public enum ShaderPass { Threshold = 0, Additive, Overlay }
-        public enum KeywordThreshold { ___ = 0, LUM_AVERAGE, LUM_VALUE }
+        public enum KeywordThreshold { ___ = 0, LUM_AVERAGE, LUM_VALUE, LUM_SATURATE }
         public enum KeywordAlpha { ___ = 0, ALPHA_THROTTLE }
 
         [System.Serializable]

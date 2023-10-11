@@ -8,7 +8,7 @@
         Cull Off ZWrite Off ZTest Always
 
 			CGINCLUDE
-			#pragma multi_compile ___ LUM_AVERAGE LUM_VALUE
+			#pragma multi_compile ___ LUM_AVERAGE LUM_VALUE LUM_SATURATE
 			#pragma multi_compile ___ ALPHA_THROTTLE
             #include "UnityCG.cginc"
 			#include "Luminance.cginc"
@@ -39,6 +39,8 @@
 				return Lightness(c.xyz);
 				#elif defined(LUM_VALUE)
 				return max(c.x, max(c.y, c.z));
+                #elif defined(LUM_SATURATE)
+                return ColorSaturate(c.xyz);
 				#else
 				return Luminance(c.xyz);
 				#endif
