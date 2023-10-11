@@ -124,6 +124,7 @@ namespace LayeredGlowSys {
             for (var i = 0; i < workspaces.Length; i++) {
                 var d = dataset.datas[i];
                 var ws = workspaces[i];
+                if (!d.enabled) continue;
                 ws.UpdateBlurTex(d, blur, mat);
                 Graphics.Blit(ws.blurred, destination, mat, (int)ShaderPass.Additive);
             }
@@ -321,6 +322,7 @@ namespace LayeredGlowSys {
         }
         [System.Serializable]
         public class Data {
+            public bool enabled = true;
             public Blur.Settings blur = new();
             public int layerIndex;
             public float intensity = 3f;
