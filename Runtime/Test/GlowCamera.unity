@@ -741,7 +741,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488143, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: InitialModule.startColor.minMaxState
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488143, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: InitialModule.startColor.maxGradient.ctime0
@@ -1157,34 +1157,34 @@ MonoBehaviour:
       debugLayer:
         serializedVersion: 2
         m_Bits: 4294967295
-      overlayMode: 1
+      overlayMode: 2
       overlayIndex: 0
       overlayHeight: 0.2
     datas:
     - enabled: 1
       blur:
-        diffusion: 5
+        diffusion: 4
         fastMode: 0
       layerIndex: 8
-      intensity: 1
-      threshold: 0.8
+      intensity: 2
+      threshold: 0.65
       thresholdMode: 0
       alphaUsage: 0
-    - enabled: 1
+    - enabled: 0
       blur:
-        diffusion: 5
+        diffusion: 4
         fastMode: 0
       layerIndex: 9
-      intensity: 1
-      threshold: 0.8
+      intensity: 2
+      threshold: 0.66
       thresholdMode: 0
       alphaUsage: 0
     - enabled: 1
       blur:
-        diffusion: 5
+        diffusion: 4
         fastMode: 0
       layerIndex: 10
-      intensity: 1
+      intensity: 2
       threshold: 0.24
       thresholdMode: 3
       alphaUsage: 0
@@ -1248,7 +1248,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2074252536}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: d97feef853875894384af2831f9f54e5, type: 3}
   m_Name: 
@@ -1407,7 +1407,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488143, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: InitialModule.startColor.minMaxState
-      value: 1
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 6846051285958488143, guid: b3961022817ee254198f2da125d5709e, type: 3}
       propertyPath: InitialModule.startColor.maxGradient.ctime0

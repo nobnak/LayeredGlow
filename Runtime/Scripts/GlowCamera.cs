@@ -130,39 +130,46 @@ namespace LayeredGlowSys {
                 Graphics.Blit(ws.blurred, destination, mat, (int)ShaderPass.Additive);
             }
 
-            var debugLayerIsVisible = Camera.allCameras
-                .Where(v => v.isActiveAndEnabled)
-                .Any(v => (v.cullingMask & dataset.commons.debugLayer.value) != 0)
-                && (dataset.commons.overlayIndex >= 0 && dataset.commons.overlayIndex < workspaces.Length);
+            var debugLayerIsVisible = dataset.commons.overlayMode != OverlayMode.None
+                && dataset.commons.overlayIndex >= 0 
+                && dataset.commons.overlayIndex < workspaces.Length;
             if (debugLayerIsVisible) {
-                var targetIndex = dataset.commons.overlayIndex;
-                var ws = workspaces[targetIndex];
-                var d = dataset.datas[targetIndex];
-                var tex = default(Texture);
-                switch (dataset.commons.overlayMode) {
-                    case OverlayMode.Glow:
-                    tex = ws.glowTex;
-                    break;
-                    case OverlayMode.Threshold:
-                    tex = ws.thresholdTex;
-                    break;
-                    case OverlayMode.Blurred:
-                    tex = ws.blurred;
-                    break;
-                }
-                if (tex != null) {
-                    var gap = 10f;
-                    var height = dataset.commons.overlayHeight * source.height;
-                    var aspect = (float)ws.glowTex.width / ws.glowTex.height;
-
-                    GL.PushMatrix();
-                    GL.LoadPixelMatrix();
-                    using (new ScopedRenderTexture(destination)) {
-                        Graphics.DrawTexture(new Rect(gap, gap + height, height * aspect, -height),
-                                tex, mat, (int)ShaderPass.Overlay);
+                var debugOutputTex = RenderTexture.GetTemporary(source.descriptor);
+                using (new ScopedRenderTexture(debugOutputTex))
+                    GL.Clear(true, true, Color.clear);
+                for (var i = 0; i < workspaces.Length; i++) {
+                    var ws = workspaces[i];
+                    var d = dataset.datas[i];
+                    if (!d.enabled) continue;
+                    var debugInputTex = default(Texture);
+                    switch (dataset.commons.overlayMode) {
+                        case OverlayMode.Glow:
+                        debugInputTex = ws.glowTex;
+                        break;
+                        case OverlayMode.Threshold:
+                        debugInputTex = ws.thresholdTex;
+                        break;
+                        case OverlayMode.Blurred:
+                        debugInputTex = ws.blurred;
+                        break;
                     }
-                    GL.PopMatrix();
+                    if (debugInputTex != null)
+                        Graphics.Blit(debugInputTex, debugOutputTex, mat, (int)ShaderPass.Additive);
                 }
+
+                var gap = 10f;
+                var height = dataset.commons.overlayHeight * source.height;
+                var aspect = (float)debugOutputTex.width / debugOutputTex.height;
+
+                GL.PushMatrix();
+                GL.LoadPixelMatrix();
+                using (new ScopedRenderTexture(destination)) {
+                    Graphics.DrawTexture(new Rect(gap, gap + height, height * aspect, -height),
+                            debugOutputTex, mat, (int)ShaderPass.Overlay);
+                }
+                GL.PopMatrix();
+
+                RenderTexture.ReleaseTemporary(debugOutputTex);
             }
         }
         #endregion
@@ -230,7 +237,7 @@ namespace LayeredGlowSys {
                 var d = dataset.datas[i];
                 var ws = workspaces[i];
                 var glowCam = ws.glowCam;
-                if (NeedResize(ws.glowTex, w, h)) {
+                if (NeedResize(ws.GlowTex, w, h)) {
                     glowCam.targetTexture = null;
                     ws.GlowTex = Resize(ref ws.glowTex, w, h, 0);
                 }
@@ -247,7 +254,7 @@ namespace LayeredGlowSys {
 
                 glowCam.backgroundColor = Color.clear;
                 glowCam.clearFlags = CameraClearFlags.Nothing;
-                glowCam.SetTargetBuffers(ws.glowTex.colorBuffer, mainTex.depthBuffer);
+                glowCam.SetTargetBuffers(ws.GlowTex.colorBuffer, mainTex.depthBuffer);
             }
         }
         void ResetAllRelatedToMainTex() {
