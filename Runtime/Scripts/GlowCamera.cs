@@ -130,13 +130,11 @@ namespace LayeredGlowSys {
                 Graphics.Blit(ws.blurred, destination, mat, (int)ShaderPass.Additive);
             }
 
-            var debugLayerIsVisible = dataset.commons.overlayMode != OverlayMode.None
-                && dataset.commons.overlayIndex >= 0 
-                && dataset.commons.overlayIndex < workspaces.Length;
+            var debugLayerIsVisible = dataset.commons.overlayMode != OverlayMode.None;
             if (debugLayerIsVisible) {
                 var debugOutputTex = RenderTexture.GetTemporary(source.descriptor);
                 using (new ScopedRenderTexture(debugOutputTex))
-                    GL.Clear(true, true, Color.clear);
+                    GL.Clear(true, true, dataset.commons.clearColor);
                 for (var i = 0; i < workspaces.Length; i++) {
                     var ws = workspaces[i];
                     var d = dataset.datas[i];
@@ -323,9 +321,7 @@ namespace LayeredGlowSys {
         [System.Serializable]
         public class Commons {
             public Color clearColor = Color.clear;
-            public LayerMask debugLayer;
             public OverlayMode overlayMode = default;
-            public int overlayIndex = -1;
             public float overlayHeight = 0.4f;
         }
         [System.Serializable]
