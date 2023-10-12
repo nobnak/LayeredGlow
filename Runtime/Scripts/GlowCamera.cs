@@ -76,8 +76,9 @@ namespace LayeredGlowSys {
                 if (targetTexture == null || targetTexture == mainTex_generated) {
                     if (NeedResize(mainTex_generated, w, h)) {
                         ResetAllRelatedToMainTex();
-                        SetTargetTextureToMainCamera(Resize(ref mainTex_generated, w, h, 24)); 
+                        Resize(ref mainTex_generated, w, h, 24); 
                     }
+                    SetTargetTextureToMainCamera(mainTex_generated);
                 } else {
                     ReleaseMainTexture();
                 }
