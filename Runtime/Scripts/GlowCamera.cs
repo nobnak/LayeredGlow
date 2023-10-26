@@ -51,7 +51,6 @@ namespace LayeredGlowSys {
                 return valid;
             };
             validator.OnValidate += () => {
-                Debug.Log($"{this.GetType().Name} : Validation");
                 var mainCam = GetMainCamera();
                 initialized_workspace = false;
 
@@ -76,17 +75,17 @@ namespace LayeredGlowSys {
                 if (targetTexture == null || targetTexture == mainTex_generated) {
                     if (NeedResize(mainTex_generated, w, h)) {
                         ResetAllRelatedToMainTex();
-                        Resize(ref mainTex_generated, w, h, 24); 
+                        targetTexture = Resize(ref mainTex_generated, w, h, 24); 
                     }
+                    mainTex_generated.name = $"Main texture (Generated)";
                     SetTargetTextureToMainCamera(mainTex_generated);
                 } else {
-                    ReleaseMainTexture();
+                    DestroyGeneratedTexture();
                 }
 
-                var mainTex = GetMainTex();
-                if (mainTex != null) {
+                if (targetTexture != null) {
                     ResizeWorkspaces();
-                    UpdateWorkspaces(mainTex);
+                    UpdateWorkspaces(targetTexture);
 
                     initialized_workspace = true;
                 }
@@ -102,7 +101,7 @@ namespace LayeredGlowSys {
                 blur = null;
             }
             ResetWorkspaces();
-            ReleaseMainTexture();
+            DestroyGeneratedTexture();
             validator.Invalidate();
         }
 
@@ -111,6 +110,9 @@ namespace LayeredGlowSys {
         }
         void Update() {
             validator.Validate();
+
+            var mainTex = link.mainCam.targetTexture;
+            Debug.Log($"Curr tex on main cam: {mainTex.name}");
         }
         void OnRenderImage(RenderTexture source, RenderTexture destination) {
             validator.Validate();
@@ -209,7 +211,7 @@ namespace LayeredGlowSys {
             var c = link.mainCam;
             c.targetTexture = targetTex;
         }
-        private void ReleaseMainTexture() {
+        private void DestroyGeneratedTexture() {
             ResetAllRelatedToMainTex();
             mainTex_generated.Destroy();
         }
@@ -256,7 +258,10 @@ namespace LayeredGlowSys {
             }
         }
         void ResetAllRelatedToMainTex() {
-            SetTargetTextureToMainCamera(null);
+            var c = link.mainCam;
+            if (c != null && c.targetTexture == mainTex_generated)
+                SetTargetTextureToMainCamera(null);
+
             foreach (var ws in workspaces)
                 if (ws.glowCam != null)
                     ws.glowCam.targetTexture = null;
