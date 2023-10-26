@@ -110,9 +110,6 @@ namespace LayeredGlowSys {
         }
         void Update() {
             validator.Validate();
-
-            var mainTex = link.mainCam.targetTexture;
-            Debug.Log($"Curr tex on main cam: {mainTex.name}");
         }
         void OnRenderImage(RenderTexture source, RenderTexture destination) {
             validator.Validate();
