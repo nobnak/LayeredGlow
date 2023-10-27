@@ -15,6 +15,9 @@ public class RenderTextureSetter : MonoBehaviour {
     protected RenderTextureWrapper textureWrapper;
 
     #region unity
+    void Awake() {
+        events.onEnable?.Invoke(false);
+    }
     void OnEnable() {
         textureWrapper = new RenderTextureWrapper(size => {
             var tex = new RenderTexture(size.x, size.y, 24);
@@ -27,14 +30,18 @@ public class RenderTextureSetter : MonoBehaviour {
         };
 
         changed.OnValidate += () => {
-            textureWrapper.Size = preset.size;
+            textureWrapper.Size = new int2(Screen.width, Screen.height);
         };
+
+        events.onEnable?.Invoke(true);
     }
     void OnDisable() {
         if (textureWrapper != null) {
             textureWrapper.Dispose();
             textureWrapper = null;
         }
+
+        events.onEnable?.Invoke(false);
     }
     void OnValidate() {
         changed.Invalidate();
@@ -43,19 +50,24 @@ public class RenderTextureSetter : MonoBehaviour {
         changed.Validate();
         textureWrapper.Validate();
     }
+    void OnRenderImage(RenderTexture source, RenderTexture destination) {
+        Graphics.Blit(textureWrapper, destination);
+    }
     #endregion
 
     #region declarations
     [System.Serializable]
     public class Events {
         public RenderTextureEvent onRenderTextureChanged = new();
+        public BoolEvent onEnable = new();
 
         [System.Serializable]
         public class RenderTextureEvent : UnityEvent<RenderTexture> { }
+        [System.Serializable]
+        public class BoolEvent : UnityEvent<bool> { }
     }
     [System.Serializable]
     public class Preset {
-        public int2 size = new int2(4, 4);
     }
     #endregion
 }

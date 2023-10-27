@@ -71,24 +71,17 @@ namespace LayeredGlowSys {
                 var w = attachedCam.pixelWidth;
                 var h = attachedCam.pixelHeight;
 
-                var targetTexture = mainCam.targetTexture;
-                if (targetTexture == null || targetTexture == mainTex_generated) {
-                    if (NeedResize(mainTex_generated, w, h)) {
-                        ResetAllRelatedToMainTex();
-                        targetTexture = Resize(ref mainTex_generated, w, h, 24); 
-                    }
+                if (NeedResize(mainTex_generated, w, h)) {
+                    ResetAllRelatedToMainTex();
+                    Resize(ref mainTex_generated, w, h, 24);
                     mainTex_generated.name = $"Main texture (Generated)";
-                    SetTargetTextureToMainCamera(mainTex_generated);
-                } else {
-                    DestroyGeneratedTexture();
                 }
+                SetTargetTextureToMainCamera(mainTex_generated);
 
-                if (targetTexture != null) {
-                    ResizeWorkspaces();
-                    UpdateWorkspaces(targetTexture);
+                ResizeWorkspaces();
+                UpdateWorkspaces(mainTex_generated);
 
-                    initialized_workspace = true;
-                }
+                initialized_workspace = true;
 
                 currAttachedCamData = attachedCam;
                 currMainCamData = mainCam;
@@ -154,13 +147,12 @@ namespace LayeredGlowSys {
                         Graphics.Blit(debugInputTex, debugOutputTex, mat, (int)ShaderPass.Additive);
                 }
 
-                var gap = 10f;
-                var height = dataset.commons.overlayHeight * source.height;
-                var aspect = (float)debugOutputTex.width / debugOutputTex.height;
-
                 GL.PushMatrix();
                 GL.LoadPixelMatrix();
                 using (new ScopedRenderTexture(destination)) {
+                    var gap = 10f;
+                    var height = dataset.commons.overlayHeight * source.height;
+                    var aspect = (float)debugOutputTex.width / debugOutputTex.height;
                     Graphics.DrawTexture(new Rect(gap, gap + height, height * aspect, -height),
                             debugOutputTex, mat, (int)ShaderPass.Overlay);
                 }
@@ -251,13 +243,13 @@ namespace LayeredGlowSys {
 
                 glowCam.backgroundColor = Color.clear;
                 glowCam.clearFlags = CameraClearFlags.Nothing;
+                glowCam.targetTexture = ws.GlowTex;
                 glowCam.SetTargetBuffers(ws.GlowTex.colorBuffer, mainTex.depthBuffer);
             }
         }
         void ResetAllRelatedToMainTex() {
             var c = link.mainCam;
-            if (c != null && c.targetTexture == mainTex_generated)
-                SetTargetTextureToMainCamera(null);
+            SetTargetTextureToMainCamera(null);
 
             foreach (var ws in workspaces)
                 if (ws.glowCam != null)
