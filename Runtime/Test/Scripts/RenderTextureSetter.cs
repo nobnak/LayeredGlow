@@ -1,7 +1,10 @@
 using Gist2.Deferred;
+using Gist2.Scope;
 using Gist2.Wrappers;
+using LayeredGlowSys;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
@@ -13,12 +16,14 @@ public class RenderTextureSetter : MonoBehaviour {
 
     protected Validator changed = new();
     protected RenderTextureWrapper textureWrapper;
+    protected Material mat;
 
     #region unity
     void Awake() {
         events.onEnable?.Invoke(false);
     }
     void OnEnable() {
+        mat = Resources.Load<Material>(GlowCamera.PATH);
         textureWrapper = new RenderTextureWrapper(size => {
             var tex = new RenderTexture(size.x, size.y, 24);
             tex.hideFlags = HideFlags.DontSave;
@@ -51,7 +56,21 @@ public class RenderTextureSetter : MonoBehaviour {
         textureWrapper.Validate();
     }
     void OnRenderImage(RenderTexture source, RenderTexture destination) {
-        Graphics.Blit(textureWrapper, destination);
+        Graphics.Blit(source, destination);
+
+        if (textureWrapper != null) {
+            GL.PushMatrix();
+            GL.LoadPixelMatrix();
+            using (new ScopedRenderTexture(destination)) {
+                var height = preset.renderSize * source.height;
+                var textureSize = textureWrapper.Size;
+                var aspect = (float)textureSize.x / textureSize.y;
+                var gap = preset.renderOffset * height;
+                Graphics.DrawTexture(new Rect(gap, gap + height, height * aspect, -height),
+                        textureWrapper, mat, (int)GlowCamera.ShaderPass.Overlay);
+            }
+            GL.PopMatrix();
+        }
     }
     #endregion
 
@@ -68,6 +87,8 @@ public class RenderTextureSetter : MonoBehaviour {
     }
     [System.Serializable]
     public class Preset {
+        public float renderSize = 0.5f;
+        public float renderOffset = 0f;
     }
     #endregion
 }
