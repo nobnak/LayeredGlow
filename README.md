@@ -8,4 +8,4 @@ Released as [UPM package on OpenUPM](https://openupm.com/packages/jp.nobnak.laye
 - Add package "Layered Glows" in Package Manager.
 
 ## Demo
-[![thumbnail](http://img.youtube.com/vi/NT3-kQz7U3c/maxresdefault.jpg)](https://youtu.be/NT3-kQz7U3c)
+[![thumbnail](http://img.youtube.com/vi/NT3-kQz7U3c/mqdefault.jpg)](https://youtu.be/NT3-kQz7U3c)
