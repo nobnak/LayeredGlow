@@ -1,11 +1,13 @@
 using Gist2.Deferred;
 using Gist2.Extensions.ComponentExt;
+using Gist2.Extensions.SizeExt;
 using Gist2.Scope;
 using LayeredGlowSys.Data;
 using PyramidBlur;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Unity.Mathematics;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Rendering;
@@ -34,7 +36,7 @@ namespace LayeredGlowSys {
         protected Workspace[] workspaces = new Workspace[0];
 
         protected CameraData currAttachedCamData;
-        protected CameraData currMainCamData;
+        protected int2 currMainCamSize;
         protected Validator validator = new();
 
         #region unity
@@ -46,7 +48,7 @@ namespace LayeredGlowSys {
             validator.CheckValidity += () => {
                 var mainCam = GetMainCamera();
                 var valid = (attachedCam != null && currAttachedCamData.Equals(attachedCam))
-                    && (mainCam != null && currMainCamData.Equals(mainCam))
+                    && (mainCam != null && math.all(currMainCamSize == mainCam.Size()))
                     && initialized_workspace;
                 return valid;
             };
@@ -84,7 +86,7 @@ namespace LayeredGlowSys {
                 initialized_workspace = true;
 
                 currAttachedCamData = attachedCam;
-                currMainCamData = mainCam;
+                currMainCamSize = mainCam.Size();
             };
         }
 
