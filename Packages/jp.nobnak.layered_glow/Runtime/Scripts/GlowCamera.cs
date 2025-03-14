@@ -27,8 +27,10 @@ namespace LayeredGlowSys {
         [SerializeField]
         protected References link = new();
 
+        protected Camera copyCam;
+
         protected Camera attachedCam;
-        protected RenderTexture mainTex_generated;
+        protected RenderTexture depthTex;
         protected Material mat;
         protected Blur blur;
 
@@ -48,13 +50,21 @@ namespace LayeredGlowSys {
             validator.CheckValidity += () => {
                 var mainCam = GetMainCamera();
                 var valid = (attachedCam != null && currAttachedCamData.Equals(attachedCam))
-                    && (mainCam != null && math.all(currMainCamSize == mainCam.Size()))
+                    && (mainCam != null && copyCam != null && math.all(currMainCamSize == mainCam.Size()))
                     && initialized_workspace;
                 return valid;
             };
             validator.OnValidate += () => {
+                Debug.Log("GlowCamera is invalidated");
                 var mainCam = GetMainCamera();
                 initialized_workspace = false;
+
+                if (copyCam == null) {
+                    var goCopyCam = new GameObject("Main Camera Copy");
+                    goCopyCam.hideFlags = HideFlags.DontSave;
+                    copyCam = goCopyCam.AddComponent<Camera>();
+                }
+                copyCam.CopyFrom(mainCam);
 
                 if (attachedCam == null) {
                     attachedCam = GetComponent<Camera>();
@@ -70,18 +80,30 @@ namespace LayeredGlowSys {
                 attachedCam.useOcclusionCulling = false;
                 attachedCam.depth = mainCam.depth + 2;
 
-                var w = attachedCam.pixelWidth;
-                var h = attachedCam.pixelHeight;
+                var w_src = attachedCam.pixelWidth;
+                var h_src = attachedCam.pixelHeight;
+                var w = w_src;
+                var h = h_src;
 
-                if (NeedResize(mainTex_generated, w, h)) {
-                    ResetAllRelatedToMainTex();
-                    Resize(ref mainTex_generated, w, h, 24);
-                    mainTex_generated.name = $"Main texture (Generated)";
+                var limitSize = dataset.commons.limitSize;
+                var scale = 1f;
+                if (4 <= limitSize.x && limitSize.x < w)
+                    scale = math.min(scale, limitSize.x / (float)w);
+                if (4 <= limitSize.y && limitSize.y < h)
+                    scale = math.min(scale, limitSize.y / (float)h);
+                if (scale < 1f) {
+                    w = (int)math.round(w * scale);
+                    h = (int)math.round(h * scale);
                 }
-                SetTargetTextureToMainCamera(mainTex_generated);
 
+                if (NeedResize(depthTex, w, h)) {
+                    ResetAllRelatedToMainTex();
+                    Resize(ref depthTex, w, h, 24, RenderTextureFormat.Depth);
+                    depthTex.name = $"Depth texture (Main camera)";
+                }
+                SetTargetTextureToMainCamera(depthTex);
                 ResizeWorkspaces();
-                UpdateWorkspaces(mainTex_generated);
+                UpdateWorkspaces(depthTex, w, h);
 
                 initialized_workspace = true;
 
@@ -105,16 +127,17 @@ namespace LayeredGlowSys {
         }
         void Update() {
             validator.Validate();
+            //Clear(depthTex);
         }
+
         void OnRenderImage(RenderTexture source, RenderTexture destination) {
             validator.Validate();
-            var mainTex = GetMainTex();
-            if (link.mainCam == null || mainTex == null || !initialized_workspace) {
+            if (!initialized_workspace) {
                 Graphics.Blit(source, destination);
                 return;
             }
 
-            Graphics.Blit(mainTex, destination);
+            Graphics.Blit(source, destination);
 
             for (var i = 0; i < workspaces.Length; i++) {
                 var d = dataset.datas[i];
@@ -163,7 +186,7 @@ namespace LayeredGlowSys {
                 RenderTexture.ReleaseTemporary(debugOutputTex);
             }
         }
-        #endregion
+#endregion
 
         #region interface
         public DataSet CurrData {
@@ -179,9 +202,11 @@ namespace LayeredGlowSys {
         #endregion
 
         #region member
-        protected RenderTexture GetMainTex() {
-            var c = link.mainCam;
-            return (mainTex_generated == null) ? c.targetTexture : mainTex_generated;
+        private static void Clear(RenderTexture depthTex) {
+            var currActiveRenderTexture = RenderTexture.active;
+            RenderTexture.active = depthTex;
+            GL.Clear(true, true, Color.clear);
+            RenderTexture.active = currActiveRenderTexture;
         }
         protected Camera GetMainCamera() {
             if (link.mainCam == null)
@@ -199,12 +224,12 @@ namespace LayeredGlowSys {
         }
         private void SetTargetTextureToMainCamera(RenderTexture targetTex) {
             events.MainTextureOnCreate.Invoke(targetTex);
-            var c = link.mainCam;
-            c.targetTexture = targetTex;
+            if (copyCam != null)
+                copyCam.targetTexture = targetTex;
         }
         private void DestroyGeneratedTexture() {
             ResetAllRelatedToMainTex();
-            mainTex_generated.Destroy();
+            depthTex.Destroy();
         }
         private void ResizeWorkspaces() {
             for (var i = dataset.datas.Length; i < workspaces.Length; i++) {
@@ -221,9 +246,7 @@ namespace LayeredGlowSys {
                 };
             }
         }
-        private void UpdateWorkspaces(RenderTexture mainTex) {
-            var w = mainTex.width;
-            var h = mainTex.height;
+        private void UpdateWorkspaces(RenderTexture depthTex, int w, int h) {
             for (var i = 0; i < workspaces.Length; i++) {
                 var d = dataset.datas[i];
                 var ws = workspaces[i];
@@ -246,7 +269,7 @@ namespace LayeredGlowSys {
                 glowCam.backgroundColor = Color.clear;
                 glowCam.clearFlags = CameraClearFlags.Nothing;
                 glowCam.targetTexture = ws.GlowTex;
-                glowCam.SetTargetBuffers(ws.GlowTex.colorBuffer, mainTex.depthBuffer);
+                glowCam.SetTargetBuffers(ws.GlowTex.colorBuffer, depthTex.depthBuffer);
             }
         }
         void ResetAllRelatedToMainTex() {
@@ -294,6 +317,7 @@ namespace LayeredGlowSys {
         public const string TAG_UNTAGGED = "Untagged";
         public static readonly int P_INTENSITY = Shader.PropertyToID("_Intensity");
         public static readonly int P_THREAHOLD = Shader.PropertyToID("_Threshold");
+        public static readonly int ID_TEMP_DEPTH_TEX = Shader.PropertyToID("_TempDepthTex");
 
         public enum OverlayMode { None = 0, Glow, Threshold, Blurred }
         public enum ShaderPass { Threshold = 0, Additive, Overlay }
@@ -319,6 +343,7 @@ namespace LayeredGlowSys {
             public Color clearColor = Color.clear;
             public OverlayMode overlayMode = default;
             public float overlayHeight = 0.4f;
+            public int2 limitSize = new(-1, -1);
         }
         [System.Serializable]
         public class Data {
