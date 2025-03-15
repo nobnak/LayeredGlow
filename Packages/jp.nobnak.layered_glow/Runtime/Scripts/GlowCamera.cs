@@ -14,7 +14,6 @@ using UnityEngine.Rendering;
 
 namespace LayeredGlowSys {
 
-    [ExecuteAlways]
     [RequireComponent(typeof(Camera))]
     public class GlowCamera : MonoBehaviour {
 
@@ -297,18 +296,21 @@ namespace LayeredGlowSys {
         }
         public static RenderTexture Resize(ref RenderTexture tex, int width, int height,
             int depth = 24,
-            RenderTextureFormat format = RenderTextureFormat.ARGBHalf) {
+            RenderTextureFormat format = RenderTextureFormat.ARGBHalf,
+            int antiAliasing = -1
+        ) {
 
-            tex.Destroy();
+            CoreUtils.Destroy(tex);
 
-            var q = QualitySettings.antiAliasing;
             tex = new RenderTexture(width, height, depth, format);
             tex.hideFlags = HideFlags.DontSave;
-            tex.antiAliasing = q <= 1 ? 1 : q;
+            if (antiAliasing >= 0)
+                tex.antiAliasing = math.max(1, antiAliasing);
             return tex;
         }
         public static RenderTexture Resize(ref RenderTexture tex, RenderTexture source) {
-            return Resize(ref tex, source.width, source.height, source.depth, source.format);
+            return Resize(ref tex, source.width, source.height, source.depth,
+                antiAliasing: source.antiAliasing, format: source.format);
         }
         #endregion
 
