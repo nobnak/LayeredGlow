@@ -5,11 +5,11 @@
   },
   "name": "jp.nobnak.layered_glow",
   "displayName": "Layered Glow",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "dependencies": {
     "com.unity.mathematics": "1.2.6",
     "com.unity.render-pipelines.core": "14.0.12",
     "jp.nobnak.gist2": "1.4.3",
-    "jp.nobnak.pyramid_blur": "1.0.1"
+    "jp.nobnak.pyramid_blur": "1.1.1"
   }
 }

@@ -54,7 +54,9 @@ namespace LayeredGlowSys {
                 return valid;
             };
             validator.OnValidate += () => {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
                 Debug.Log("GlowCamera is invalidated");
+#endif
                 var mainCam = GetMainCamera();
                 initialized_workspace = false;
 
@@ -100,7 +102,9 @@ namespace LayeredGlowSys {
                     Resize(ref depthTex, w, h, 24, RenderTextureFormat.Depth);
                     depthTex.name = $"Depth texture (Main camera)";
                 }
-                SetTargetTextureToMainCamera(depthTex);
+                copyCam.targetTexture = depthTex;
+                NotifyDepthTextureOnCreate(depthTex);
+
                 ResizeWorkspaces();
                 UpdateWorkspaces(depthTex, w, h);
 
@@ -212,23 +216,13 @@ namespace LayeredGlowSys {
                 link.mainCam = Camera.main;
             return link.mainCam;
         }
-        private void ClearAllGlowTextures() {
-            for (var i = 0; i < workspaces.Length; i++) {
-                var ws = workspaces[i];
-
-                using (new ScopedRenderTexture(ws.glowTex)) {
-                    GL.Clear(false, true, Color.clear);
-                }
-            }
-        }
-        private void SetTargetTextureToMainCamera(RenderTexture targetTex) {
-            events.MainTextureOnCreate.Invoke(targetTex);
-            if (copyCam != null)
-                copyCam.targetTexture = targetTex;
+        private void NotifyDepthTextureOnCreate(RenderTexture targetTex) {
+            events.DepthTextureOnCreate?.Invoke(targetTex);
         }
         private void DestroyGeneratedTexture() {
             ResetAllRelatedToMainTex();
-            depthTex.Destroy();
+            if (copyCam != null) copyCam.targetTexture = null;
+            CoreUtils.Destroy(depthTex);
         }
         private void ResizeWorkspaces() {
             for (var i = dataset.datas.Length; i < workspaces.Length; i++) {
@@ -272,8 +266,7 @@ namespace LayeredGlowSys {
             }
         }
         void ResetAllRelatedToMainTex() {
-            var c = link.mainCam;
-            SetTargetTextureToMainCamera(null);
+            NotifyDepthTextureOnCreate(null);
 
             foreach (var ws in workspaces)
                 if (ws.glowCam != null)
@@ -331,7 +324,7 @@ namespace LayeredGlowSys {
             [System.Serializable]
             public class RenderTextureEvent : UnityEvent<RenderTexture> { }
 
-            public RenderTextureEvent MainTextureOnCreate = new();
+            public RenderTextureEvent DepthTextureOnCreate = new();
         }
         [System.Serializable]
         public class References {
