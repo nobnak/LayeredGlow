@@ -3,6 +3,7 @@
     "rootNamespace": "",
     "references": [
         "Unity.Mathematics",
+        "Unity.RenderPipelines.Core.Runtime",
         "Gist2",
         "PyramidBlur"
     ],
