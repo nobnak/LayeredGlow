@@ -14,7 +14,6 @@ using UnityEngine.Rendering;
 
 namespace LayeredGlowSys {
 
-    [ExecuteAlways]
     [RequireComponent(typeof(Camera))]
     public class GlowCamera : MonoBehaviour {
 
@@ -27,7 +26,9 @@ namespace LayeredGlowSys {
         [SerializeField]
         protected References link = new();
 
-        protected Camera copyCam;
+        protected Camera currMainCam;
+        protected Material matBlitDepth;
+        protected CommandBuffer cbDepthTex;
 
         protected Camera attachedCam;
         protected RenderTexture depthTex;
@@ -44,27 +45,23 @@ namespace LayeredGlowSys {
         #region unity
         void OnEnable() {
             blur = new Blur();
+            cbDepthTex = new CommandBuffer() { name = "Depth Texture Capture" };
+            matBlitDepth = new Material(Shader.Find(SHADER_Hidden_BlitToDepth));
+
             mat = Resources.Load<Material>(PATH);
 
             validator.Reset();
             validator.CheckValidity += () => {
                 var mainCam = GetMainCamera();
                 var valid = (attachedCam != null && currAttachedCamData.Equals(attachedCam))
-                    && (mainCam != null && copyCam != null && math.all(currMainCamSize == mainCam.Size()))
+                    && (mainCam != null && currMainCam == mainCam && math.all(currMainCamSize == mainCam.Size()))
                     && initialized_workspace;
                 return valid;
             };
             validator.OnValidate += () => {
-                Debug.Log("GlowCamera is invalidated");
+                Debug.Log($"{name}: OnValidate");
                 var mainCam = GetMainCamera();
                 initialized_workspace = false;
-
-                if (copyCam == null) {
-                    var goCopyCam = new GameObject("Main Camera Copy");
-                    goCopyCam.hideFlags = HideFlags.DontSave;
-                    copyCam = goCopyCam.AddComponent<Camera>();
-                }
-                copyCam.CopyFrom(mainCam);
 
                 if (attachedCam == null) {
                     attachedCam = GetComponent<Camera>();
@@ -98,28 +95,35 @@ namespace LayeredGlowSys {
 
                 if (NeedResize(depthTex, w, h)) {
                     ResetAllRelatedToMainTex();
-                    Resize(ref depthTex, w, h, 24, RenderTextureFormat.Depth);
+                    Resize(ref depthTex, w, h, 24, format:RenderTextureFormat.Depth);
                     depthTex.name = $"Depth texture (Main camera)";
                 }
-                SetTargetTextureToMainCamera(depthTex);
+                if (currMainCam != null)
+                    currMainCam.RemoveCommandBuffer(preset.evtDepthCapture, cbDepthTex);
+                mainCam.AddCommandBuffer(preset.evtDepthCapture, cbDepthTex);
+                mainCam.depthTextureMode |= DepthTextureMode.Depth;
+                cbDepthTex.Clear();
+                cbDepthTex.Blit(BuiltinRenderTextureType.Depth, depthTex, matBlitDepth);
+
                 ResizeWorkspaces();
                 UpdateWorkspaces(depthTex, w, h);
 
                 initialized_workspace = true;
 
                 currAttachedCamData = attachedCam;
+                currMainCam = mainCam;
                 currMainCamSize = mainCam.Size();
             };
         }
 
         void OnDisable() {
-            if (blur != null) {
-                blur.Dispose();
-                blur = null;
-            }
+            blur?.Dispose();
+            if (currMainCam != null)
+                currMainCam.RemoveCommandBuffer(preset.evtDepthCapture, cbDepthTex);
+            cbDepthTex?.Dispose();
+            CoreUtils.Destroy(matBlitDepth);
             ResetWorkspaces();
             DestroyGeneratedTexture();
-            validator.Invalidate();
         }
 
         void OnValidate() {
@@ -127,17 +131,15 @@ namespace LayeredGlowSys {
         }
         void Update() {
             validator.Validate();
-            //Clear(depthTex);
         }
 
         void OnRenderImage(RenderTexture source, RenderTexture destination) {
             validator.Validate();
-            if (!initialized_workspace) {
-                Graphics.Blit(source, destination);
-                return;
-            }
 
             Graphics.Blit(source, destination);
+            if (!initialized_workspace) {
+                return;
+            }
 
             for (var i = 0; i < workspaces.Length; i++) {
                 var d = dataset.datas[i];
@@ -224,8 +226,6 @@ namespace LayeredGlowSys {
         }
         private void SetTargetTextureToMainCamera(RenderTexture targetTex) {
             events.MainTextureOnCreate.Invoke(targetTex);
-            if (copyCam != null)
-                copyCam.targetTexture = targetTex;
         }
         private void DestroyGeneratedTexture() {
             ResetAllRelatedToMainTex();
@@ -297,24 +297,28 @@ namespace LayeredGlowSys {
         }
         public static RenderTexture Resize(ref RenderTexture tex, int width, int height,
             int depth = 24,
-            RenderTextureFormat format = RenderTextureFormat.ARGBHalf) {
+            RenderTextureFormat format = RenderTextureFormat.ARGBHalf,
+            int antiAliasing = -1
+        ) {
 
-            tex.Destroy();
+            CoreUtils.Destroy(tex);
 
-            var q = QualitySettings.antiAliasing;
             tex = new RenderTexture(width, height, depth, format);
             tex.hideFlags = HideFlags.DontSave;
-            tex.antiAliasing = q <= 1 ? 1 : q;
+            if (antiAliasing >= 0)
+                tex.antiAliasing = math.max(1, antiAliasing);
             return tex;
         }
         public static RenderTexture Resize(ref RenderTexture tex, RenderTexture source) {
-            return Resize(ref tex, source.width, source.height, source.depth, source.format);
+            return Resize(ref tex, source.width, source.height, source.depth, 
+                antiAliasing:source.antiAliasing, format:source.format);
         }
         #endregion
 
         #region classes
         public const string PATH = "GlowCamera-GlowEffect";
         public const string TAG_UNTAGGED = "Untagged";
+        public const string SHADER_Hidden_BlitToDepth = "Hidden/BlitToDepth";
         public static readonly int P_INTENSITY = Shader.PropertyToID("_Intensity");
         public static readonly int P_THREAHOLD = Shader.PropertyToID("_Threshold");
         public static readonly int ID_TEMP_DEPTH_TEX = Shader.PropertyToID("_TempDepthTex");
@@ -337,6 +341,7 @@ namespace LayeredGlowSys {
         }
         [System.Serializable]
         public class Preset {
+            public CameraEvent evtDepthCapture = CameraEvent.AfterDepthTexture;
         }
         [System.Serializable]
         public class Commons {
