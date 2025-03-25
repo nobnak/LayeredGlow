@@ -26,7 +26,7 @@ namespace LayeredGlowSys {
         [SerializeField]
         protected References link = new();
 
-        protected Camera copyCam;
+        protected Camera depthCaptureCam;
 
         protected Camera attachedCam;
         protected RenderTexture depthTex;
@@ -49,7 +49,7 @@ namespace LayeredGlowSys {
             validator.CheckValidity += () => {
                 var mainCam = GetMainCamera();
                 var valid = (attachedCam != null && currAttachedCamData.Equals(attachedCam))
-                    && (mainCam != null && copyCam != null && math.all(currMainCamSize == mainCam.Size()))
+                    && (mainCam != null && depthCaptureCam != null && math.all(currMainCamSize == mainCam.Size()))
                     && initialized_workspace;
                 return valid;
             };
@@ -60,12 +60,13 @@ namespace LayeredGlowSys {
                 var mainCam = GetMainCamera();
                 initialized_workspace = false;
 
-                if (copyCam == null) {
-                    var goCopyCam = new GameObject("Main Camera Copy");
-                    goCopyCam.hideFlags = HideFlags.DontSave;
-                    copyCam = goCopyCam.AddComponent<Camera>();
+                if (depthCaptureCam == null) {
+                    var goDepthCaptureCam = new GameObject("Depth Capture Camera");
+                    goDepthCaptureCam.hideFlags = HideFlags.DontSave;
+                    goDepthCaptureCam.transform.SetParent(mainCam.transform, false);
+                    depthCaptureCam = goDepthCaptureCam.AddComponent<Camera>();
                 }
-                copyCam.CopyFrom(mainCam);
+                depthCaptureCam.CopyFrom(mainCam);
 
                 if (attachedCam == null) {
                     attachedCam = GetComponent<Camera>();
@@ -102,7 +103,7 @@ namespace LayeredGlowSys {
                     Resize(ref depthTex, w, h, 24, RenderTextureFormat.Depth);
                     depthTex.name = $"Depth texture (Main camera)";
                 }
-                copyCam.targetTexture = depthTex;
+                depthCaptureCam.targetTexture = depthTex;
                 NotifyDepthTextureOnCreate(depthTex);
 
                 ResizeWorkspaces();
@@ -119,6 +120,11 @@ namespace LayeredGlowSys {
             if (blur != null) {
                 blur.Dispose();
                 blur = null;
+            }
+            if (depthCaptureCam != null) {
+                depthCaptureCam.targetTexture = null;
+                CoreUtils.Destroy(gameObject);
+                depthCaptureCam = null;
             }
             ResetWorkspaces();
             DestroyGeneratedTexture();
@@ -221,7 +227,7 @@ namespace LayeredGlowSys {
         }
         private void DestroyGeneratedTexture() {
             ResetAllRelatedToMainTex();
-            if (copyCam != null) copyCam.targetTexture = null;
+            if (depthCaptureCam != null) depthCaptureCam.targetTexture = null;
             CoreUtils.Destroy(depthTex);
         }
         private void ResizeWorkspaces() {
@@ -379,11 +385,11 @@ namespace LayeredGlowSys {
             public void Dispose() {
                 if (glowCam != null) {
                     glowCam.targetTexture = null;
-                    glowCam.gameObject.Destroy();
+                    CoreUtils.Destroy(glowCam.gameObject);
                 }
-                glowTex.Destroy();
-                thresholdTex.Destroy();
-                blurred.Destroy();
+                CoreUtils.Destroy(glowTex);
+                CoreUtils.Destroy(thresholdTex);
+                CoreUtils.Destroy(blurred);
 
             }
             #endregion
