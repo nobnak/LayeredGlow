@@ -127,7 +127,7 @@ namespace LayeredGlowSys {
             }
             if (depthCaptureCam != null) {
                 depthCaptureCam.targetTexture = null;
-                CoreUtils.Destroy(gameObject);
+                CoreUtils.Destroy(depthCaptureCam.gameObject);
                 depthCaptureCam = null;
             }
             ResetWorkspaces();
