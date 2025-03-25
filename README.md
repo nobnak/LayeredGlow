@@ -9,4 +9,4 @@ Add scoped repository:
 Install "[Layered Glow](https://openupm.com/packages/jp.nobnak.layered_glow/)" on Package Manager.
 
 ## Usage
-[![Dense grid visualization](http://img.youtube.com/vi/1UEmdcxREWA/mqdefault.jpg)](https://youtu.be/1UEmdcxREWA)
+[![Dense grid visualization](http://img.youtube.com/vi/1UEmdcxREWA/maxresdefault.jpg)](https://youtu.be/1UEmdcxREWA)
