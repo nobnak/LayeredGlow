@@ -59,6 +59,10 @@ namespace LayeredGlowSys {
 #endif
                 var mainCam = GetMainCamera();
                 initialized_workspace = false;
+                if (mainCam == null) {
+                    Debug.LogWarning("Main camera is not found.");
+                    return;
+                }
 
                 if (depthCaptureCam == null) {
                     var goDepthCaptureCam = new GameObject("Depth Capture Camera");
